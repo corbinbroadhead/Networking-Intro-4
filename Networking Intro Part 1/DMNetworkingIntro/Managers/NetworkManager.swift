@@ -30,23 +30,23 @@ class NetworkManager {
      
      This is a tricky function, so some starter code has been provided.
      */
-    func getUsers() {
+    func getUsers(completed: @escaping (Result<[User], DMError>) -> Void) {
         
         // 3.3 Append the "/users" endpoint to the base URL and store the result in a variable. You should end up with this String: "https://reqres.in/api/users".
         let urlExtended = baseUrl + "users"
         // 3.3 Create a `URL` object from the String. If the `URL` is nil, break out of the function.
         guard let url = URL(string: urlExtended) else {
-            return
+            return completed(.failure(.invalidURL))
         }
         
         let task = URLSession.shared.dataTask(with: url) { data, response, error in
             // 3.3 If the error is not nil, break out of the function.
             if error != nil {
-                return
+                return completed(.failure(.invalidData))
             }
             // 3.3 Unwrap the data. If it is nil, break out of the function.
             guard let data else {
-                return
+                return completed(.failure(.invalidResponse))
             }
             let decoder = JSONDecoder()
             decoder.keyDecodingStrategy = .convertFromSnakeCase
@@ -56,8 +56,10 @@ class NetworkManager {
                 let usersData = try decoder.decode(UserResponse.self, from: data)
                 // 3.4 Call the `delegate`'s `usersRetrieved` function, passing the `data` array from the decoded `UserResponse`.
                 self.delegate?.usersRetrieved(users: usersData.data)
+                return completed(.success(usersData.data))
             } catch {
                 print("Error during decoding, \(error)")
+                return completed(.failure(.unableToComplete))
             }
         }
         

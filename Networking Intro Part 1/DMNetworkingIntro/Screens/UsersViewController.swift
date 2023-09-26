@@ -13,6 +13,16 @@ import UIKit
  3. Follow the instructions in the `NetworkManager` file.
  */
 class UsersViewController: UIViewController, NetworkManagerDelegate {
+    
+    func presentAlert(with error: DMError) {
+        let dialogMessage = UIAlertController(title: "OK", message: error.rawValue, preferredStyle: .alert)
+        let okButton = UIAlertAction(title: "OK", style: .default, handler: { (action) -> Void in
+            print("Ok button tapped")
+        })
+        dialogMessage.addAction(okButton)
+        self.present(dialogMessage, animated: true, completion: nil)
+    }
+
 
     /**
      4. Create a variable called `users` and set it to an empty array of `User` objects.
@@ -35,7 +45,14 @@ class UsersViewController: UIViewController, NetworkManagerDelegate {
      */
     func getUsers() {
         NetworkManager.shared.delegate = self
-        NetworkManager.shared.getUsers()
+        NetworkManager.shared.getUsers { result in
+            switch result {
+            case .success(let users):
+                self.usersRetrieved(users: users)
+            case .failure(let error):
+                self.presentAlert(with: error)
+            }
+        }
     }
     
     func configureTableView() {
